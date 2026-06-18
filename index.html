@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airway Bill & Document Tracker | ORBEM Solutions</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Marked.js for AI Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo-icon">
+          <i data-lucide="plane-takeoff"></i>
+        </div>
+        <div class="brand-text">
+          <h2>ORBEM</h2>
+          <span>Cargo Solutions</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-tab="dashboard-tab">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-tab="shipments-tab" id="btn-shipments-tab">
+          <i data-lucide="package"></i>
+          <span>Shipments</span>
+        </button>
+        <button class="nav-btn" data-tab="booking-tab">
+          <i data-lucide="file-plus"></i>
+          <span>New Booking</span>
+        </button>
+        <button class="nav-btn" data-tab="ai-tab">
+          <i data-lucide="sparkles"></i>
+          <span>AI Cargo Lab</span>
+        </button>
+      </nav>
+
+      <!-- Connection Status Panel -->
+      <div class="sidebar-status">
+        <div class="status-title">System Status</div>
+        <div class="status-item" id="status-db">
+          <span class="status-dot warning"></span>
+          <span class="status-label">Database: Checking...</span>
+        </div>
+        <div class="status-item" id="status-ai">
+          <span class="status-dot warning"></span>
+          <span class="status-label">Groq AI: Checking...</span>
+        </div>
+      </div>
+      
+      <div class="sidebar-footer">
+        <p>© 2026 ORBEM Solutions</p>
+        <span>v1.0.0 (Prototype)</span>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <header class="top-bar">
+        <div class="page-title">
+          <h1 id="active-tab-title">Dashboard Overview</h1>
+          <p id="active-tab-subtitle">Real-time status updates and document processing metrics.</p>
+        </div>
+        <div class="user-profile">
+          <div class="notification-bell">
+            <i data-lucide="bell"></i>
+            <span class="badge" id="notification-count">0</span>
+          </div>
+          <div class="avatar">
+            <span>OPS</span>
+          </div>
+          <div class="profile-details">
+            <span class="name">Operations Officer</span>
+            <span class="role">Admin Console</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- TAB 1: DASHBOARD -->
+      <section class="tab-panel active" id="dashboard-tab">
+        
+        <!-- Stats Summary Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Total Active AWB</span>
+              <div class="stat-icon info">
+                <i data-lucide="plane"></i>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-total-shipments">0</div>
+            <div class="stat-footer">
+              <span class="trend neutral">Currently registered bookings</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Missing Documents</span>
+              <div class="stat-icon warning">
+                <i data-lucide="file-warning"></i>
+              </div>
+            </div>
+            <div class="stat-value text-warning" id="stat-missing-docs">0</div>
+            <div class="stat-footer">
+              <span class="trend negative" id="stat-missing-percentage">0% of total load</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Completed Documents</span>
+              <div class="stat-icon success">
+                <i data-lucide="file-check"></i>
+              </div>
+            </div>
+            <div class="stat-value text-success" id="stat-completed-docs">0</div>
+            <div class="stat-footer">
+              <span class="trend positive" id="stat-completed-percentage">0% ready for flight</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Ready for Acceptance</span>
+              <div class="stat-icon primary">
+                <i data-lucide="shield-check"></i>
+              </div>
+            </div>
+            <div class="stat-value text-primary" id="stat-ready-acceptance">0</div>
+            <div class="stat-footer">
+              <span class="trend positive">Cleared to load</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Layout Split -->
+        <div class="dashboard-split">
+          <!-- Recent Shipments List Card -->
+          <div class="content-card recent-shipments-card">
+            <div class="card-header">
+              <h3>Recent Cargo Bookings</h3>
+              <button class="btn btn-secondary btn-sm" id="btn-dashboard-view-all">
+                <span>View All</span>
+                <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>AWB Number</th>
+                    <th>Origin / Dest</th>
+                    <th>Cargo Type</th>
+                    <th>Chargeable Wt</th>
+                    <th>Required Checklists</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-shipments-tbody">
+                  <!-- JS Dynamic Content -->
+                  <tr>
+                    <td colspan="7" class="loading-cell">
+                      <div class="spinner"></div> Loading recent cargo bookings...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Document Alerts Panel -->
+          <div class="content-card alerts-panel-card">
+            <div class="card-header">
+              <h3>Operations Alert Center</h3>
+              <span class="alert-count-badge" id="alert-count">0 Alerts</span>
+            </div>
+            <div class="alert-list" id="alert-list-container">
+              <!-- JS Dynamic Alerts -->
+              <div class="empty-alerts">
+                <i data-lucide="check-circle-2"></i>
+                <p>No critical document alerts. All clear!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: SHIPMENTS -->
+      <section class="tab-panel" id="shipments-tab">
+        <div class="content-card shipments-list-card">
+          <!-- Search & Filter Controls -->
+          <div class="filter-bar">
+            <div class="search-box">
+              <i data-lucide="search"></i>
+              <input type="text" id="shipments-search" placeholder="Search by AWB, Sender, Receiver...">
+            </div>
+            
+            <div class="filter-group">
+              <div class="select-wrapper">
+                <select id="filter-cargo-type">
+                  <option value="">All Cargo Types</option>
+                  <option value="General">General</option>
+                  <option value="Perishable">Perishable</option>
+                  <option value="Hazardous">Hazardous</option>
+                  <option value="Electronics">Electronics</option>
+                </select>
+              </div>
+              
+              <div class="select-wrapper">
+                <select id="filter-status">
+                  <option value="">All Statuses</option>
+                  <option value="Pending Documents">Pending Documents</option>
+                  <option value="Documents Complete">Documents Complete</option>
+                  <option value="Ready for Cargo Acceptance">Ready for Cargo Acceptance</option>
+                  <option value="In Transit">In Transit</option>
+                  <option value="Delivered">Delivered</option>
+                </select>
+              </div>
+              
+              <button class="btn btn-secondary" id="btn-clear-filters">
+                <i data-lucide="refresh-cw"></i>
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Shipments Data Table -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>AWB Number</th>
+                  <th>Sender / Receiver</th>
+                  <th>Route</th>
+                  <th>Cargo Type</th>
+                  <th>Chargeable Wt</th>
+                  <th>Docs Status</th>
+                  <th>Workflow Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="shipments-tbody">
+                <!-- JS Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: NEW BOOKING -->
+      <section class="tab-panel" id="booking-tab">
+        <div class="booking-split">
+          <!-- Booking Entry Form -->
+          <div class="content-card booking-form-card">
+            <div class="card-header">
+              <h3>Airway Bill Registration Form</h3>
+              <p>Enter cargo details and verify document checklists for new air consignments.</p>
+            </div>
+            
+            <form id="booking-form" class="form-grid">
+              
+              <div class="form-section span-2">AWB & Identity Info</div>
+              
+              <div class="form-group">
+                <label for="awb_number">Airway Bill Number <span class="required">*</span></label>
+                <div class="input-with-action">
+                  <input type="text" id="awb_number" name="awb_number" placeholder="e.g. AWB-12345678" required>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-generate-awb">Auto-Gen</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="cargo_type">Cargo Classification <span class="required">*</span></label>
+                <select id="cargo_type" name="cargo_type" required>
+                  <option value="General">General Merchandise</option>
+                  <option value="Perishable">Perishable (Cold Chain)</option>
+                  <option value="Hazardous">Hazardous Materials (Dangerous Goods)</option>
+                  <option value="Electronics">Electronics (Lithium Batteries)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="sender_name">Shipper / Sender Name <span class="required">*</span></label>
+                <input type="text" id="sender_name" name="sender_name" placeholder="E.g. Apple Inc. India" required>
+              </div>
+
+              <div class="form-group">
+                <label for="receiver_name">Consignee / Receiver Name <span class="required">*</span></label>
+                <input type="text" id="receiver_name" name="receiver_name" placeholder="E.g. Apex Logistics London" required>
+              </div>
+
+              <div class="form-section span-2">Route & Dimensions</div>
+
+              <div class="form-group">
+                <label for="origin">Airport of Origin (IATA Code) <span class="required">*</span></label>
+                <input type="text" id="origin" name="origin" placeholder="e.g. DEL" maxlength="3" required>
+              </div>
+
+              <div class="form-group">
+                <label for="destination">Airport of Destination (IATA Code) <span class="required">*</span></label>
+                <input type="text" id="destination" name="destination" placeholder="e.g. LHR" maxlength="3" required>
+              </div>
+
+              <div class="form-group">
+                <label for="weight">Actual Weight (kg) <span class="required">*</span></label>
+                <input type="number" id="weight" name="weight" min="0.1" step="0.1" placeholder="e.g. 100" required>
+              </div>
+
+              <div class="form-group">
+                <label for="dimensions">Dimensions (L x W x H in cm) <span class="required">*</span></label>
+                <input type="text" id="dimensions" name="dimensions" placeholder="e.g. 100 x 80 x 60" required>
+                <span class="input-hint">Format: Length x Width x Height</span>
+              </div>
+
+              <div class="form-section span-2">Initial Submitted Checklist</div>
+
+              <div class="checklist-grid span-2">
+                <label class="checkbox-card">
+                  <input type="checkbox" id="has_invoice" name="has_invoice" checked>
+                  <div class="checkbox-content">
+                    <i data-lucide="file-text"></i>
+                    <span>Commercial Invoice</span>
+                  </div>
+                </label>
+                
+                <label class="checkbox-card">
+                  <input type="checkbox" id="has_packing_list" name="has_packing_list">
+                  <div class="checkbox-content">
+                    <i data-lucide="list-checks"></i>
+                    <span>Packing List</span>
+                  </div>
+                </label>
+                
+                <label class="checkbox-card">
+                  <input type="checkbox" id="has_id_proof" name="has_id_proof">
+                  <div class="checkbox-content">
+                    <i data-lucide="contact-2"></i>
+                    <span>ID Proof</span>
+                  </div>
+                </label>
+                
+                <label class="checkbox-card">
+                  <input type="checkbox" id="has_cargo_declaration" name="has_cargo_declaration">
+                  <div class="checkbox-content">
+                    <i data-lucide="shield-alert"></i>
+                    <span>Cargo Declaration</span>
+                  </div>
+                </label>
+              </div>
+
+              <div class="form-group span-2">
+                <label for="cargo_description">Cargo Description</label>
+                <textarea id="cargo_description" name="cargo_description" rows="3" placeholder="Describe cargo contents, packaging type, fragile components..."></textarea>
+              </div>
+
+              <div class="form-actions span-2">
+                <button type="reset" class="btn btn-secondary">Clear Fields</button>
+                <button type="submit" class="btn btn-primary">
+                  <i data-lucide="file-check"></i>
+                  <span>Register Airway Bill</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Dynamic Booking Assistant Card -->
+          <div class="content-card booking-assistant-card">
+            <div class="card-header">
+              <h3>Smart Calculator Assistant</h3>
+            </div>
+            
+            <div class="assistant-content">
+              <!-- Live AWB Calculation Indicator -->
+              <div class="assistant-metric-card">
+                <span class="metric-label">Chargeable Weight Calculation</span>
+                <div class="metric-result">
+                  <span id="calc-chargeable-wt">0.0</span> <span class="unit">kg</span>
+                </div>
+                <div class="metric-breakdown">
+                  <div class="breakdown-row">
+                    <span>Actual Scale Weight:</span>
+                    <span id="calc-actual-wt">0.0 kg</span>
+                  </div>
+                  <div class="breakdown-row">
+                    <span>Volumetric Weight:</span>
+                    <span id="calc-volume-wt">0.0 kg</span>
+                  </div>
+                </div>
+                <div class="metric-note">
+                  <p><i data-lucide="info"></i> Standard Dimensional Factor: <strong>L × W × H (cm) / 6000</strong></p>
+                  <p>Airlines charge whichever is higher.</p>
+                </div>
+              </div>
+
+              <!-- AI Assistant Prompt Panel -->
+              <div class="assistant-action-box">
+                <h4>AI Assistance Panel</h4>
+                <p>Run these quick optimizations during booking:</p>
+                <button type="button" class="btn btn-secondary btn-block" id="btn-assistant-clean-desc">
+                  <i data-lucide="sparkles"></i>
+                  <span>Standardize Description via AI</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-block" id="btn-assistant-checklist">
+                  <i data-lucide="list"></i>
+                  <span>Check Customs Checklist via AI</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: AI CARGO LAB -->
+      <section class="tab-panel" id="ai-tab">
+        <div class="ai-lab-layout">
+          <!-- AI Action Controls Card -->
+          <div class="content-card ai-controls-card">
+            <div class="card-header">
+              <h3>LLaMA AI Command Center</h3>
+              <p>Execute automated rule validations, quotes generation, and compliance checks.</p>
+            </div>
+            
+            <div class="ai-form-group">
+              <label for="ai-shipment-select">Select Active Shipment / AWB</label>
+              <select id="ai-shipment-select">
+                <option value="">-- Choose AWB --</option>
+                <!-- Dynamic loading of AWB options -->
+              </select>
+            </div>
+
+            <div class="ai-action-buttons">
+              <button class="ai-action-card" data-action="quotation" disabled>
+                <div class="card-icon"><i data-lucide="circle-dollar-sign"></i></div>
+                <div class="card-body">
+                  <h4>Air Freight Quotation</h4>
+                  <p>Generate a detailed pricing rate structure, fuel surcharges, and service totals.</p>
+                </div>
+              </button>
+
+              <button class="ai-action-card" data-action="customs" disabled>
+                <div class="card-icon"><i data-lucide="scroll"></i></div>
+                <div class="card-body">
+                  <h4>Customs &amp; Compliance Check</h4>
+                  <p>Fetch mandatory documents and inspection codes for destination airport clearances.</p>
+                </div>
+              </button>
+
+              <button class="ai-action-card" data-action="clean_description" disabled>
+                <div class="card-icon"><i data-lucide="spell-check"></i></div>
+                <div class="card-body">
+                  <h4>Standardize Cargo Description</h4>
+                  <p>Rewrite colloquial description into HS Code compliant cargo nomenclature.</p>
+                </div>
+              </button>
+
+              <button class="ai-action-card" data-action="route_options" disabled>
+                <div class="card-icon"><i data-lucide="milestone"></i></div>
+                <div class="card-body">
+                  <h4>Route &amp; Flight Optimization</h4>
+                  <p>Recommend flight routes, transit carriers, and transfer hubs for speed/cost efficiency.</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- AI Output Card -->
+          <div class="content-card ai-output-card">
+            <div class="card-header">
+              <h3>LLaMA AI Insight Terminal</h3>
+              <div class="terminal-controls">
+                <span class="control-dot green"></span>
+                <span class="control-dot yellow"></span>
+                <span class="control-dot red"></span>
+              </div>
+            </div>
+            
+            <div class="terminal-body">
+              <div class="terminal-loading hidden" id="ai-loading">
+                <div class="spinner"></div>
+                <p>LLaMA is processing cargo parameters...</p>
+              </div>
+              <div class="terminal-content" id="ai-output-result">
+                <div class="terminal-welcome">
+                  <i data-lucide="cpu"></i>
+                  <h4>Operational Assistant Ready</h4>
+                  <p>Select a shipment on the left and choose an AI operation to generate reports.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- DETAILED VIEW MODAL -->
+    <div class="modal-overlay hidden" id="shipment-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="modal-awb-title">AWB-XXXXXXXX</h2>
+          <button class="btn-close-modal" id="btn-close-modal">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="modal-grid">
+            
+            <!-- Left Info Panel -->
+            <div class="modal-panel-info">
+              <h3 class="panel-section-title">Shipment Information</h3>
+              <div class="info-list">
+                <div class="info-row">
+                  <span class="lbl">Shipper Name:</span>
+                  <span class="val" id="modal-sender">Apple India</span>
+                </div>
+                <div class="info-row">
+                  <span class="lbl">Consignee Name:</span>
+                  <span class="val" id="modal-receiver">Apex London</span>
+                </div>
+                <div class="info-row">
+                  <span class="lbl">Origin Airport:</span>
+                  <span class="val highlight" id="modal-origin">DEL</span>
+                </div>
+                <div class="info-row">
+                  <span class="lbl">Destination Airport:</span>
+                  <span class="val highlight" id="modal-destination">LHR</span>
+                </div>
+                <div class="info-row">
+                  <span class="lbl">Cargo Classification:</span>
+                  <span class="val" id="modal-cargo-type">General</span>
+                </div>
+                <div class="info-row">
+                  <span class="lbl">Actual Weight:</span>
+                  <span class="val" id="modal-weight">100 kg</span>
+                </div>
+                <div class="info-row">
+                  <span class="lbl">Dimensions:</span>
+                  <span class="val" id="modal-dimensions">100 x 80 x 60 cm</span>
+                </div>
+                <div class="info-row">
+                  <span class="lbl">Chargeable Weight:</span>
+                  <span class="val highlight" id="modal-chargeable-weight">266.7 kg</span>
+                </div>
+                <div class="info-row full-width">
+                  <span class="lbl">Cargo Description:</span>
+                  <span class="val text-block" id="modal-description">Apple electronic tablets and packaging cases.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Controls Panel -->
+            <div class="modal-panel-actions">
+              <h3 class="panel-section-title">Document Checklist Status</h3>
+              <div class="modal-checklist-list">
+                <label class="modal-checklist-item">
+                  <input type="checkbox" id="modal-check-invoice" data-doc="invoice">
+                  <span class="custom-checkbox"></span>
+                  <span class="doc-name">Commercial Invoice</span>
+                </label>
+                
+                <label class="modal-checklist-item">
+                  <input type="checkbox" id="modal-check-packing-list" data-doc="packing_list">
+                  <span class="custom-checkbox"></span>
+                  <span class="doc-name">Packing List</span>
+                </label>
+                
+                <label class="modal-checklist-item">
+                  <input type="checkbox" id="modal-check-id-proof" data-doc="id_proof">
+                  <span class="custom-checkbox"></span>
+                  <span class="doc-name">Consignee ID Proof</span>
+                </label>
+                
+                <label class="modal-checklist-item">
+                  <input type="checkbox" id="modal-check-cargo-declaration" data-doc="cargo_declaration">
+                  <span class="custom-checkbox"></span>
+                  <span class="doc-name">Cargo Declaration</span>
+                </label>
+              </div>
+
+              <h3 class="panel-section-title spacing-top">Workflow Transition</h3>
+              <div class="workflow-status-select-box">
+                <label for="modal-status-select">Current Operations Status:</label>
+                <div class="select-wrapper">
+                  <select id="modal-status-select">
+                    <option value="Pending Documents">Pending Documents</option>
+                    <option value="Documents Complete">Documents Complete</option>
+                    <option value="Ready for Cargo Acceptance">Ready for Cargo Acceptance</option>
+                    <option value="In Transit">In Transit</option>
+                    <option value="Delivered">Delivered</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="quick-ai-trigger-box">
+                <h4>Quick AI Triggers</h4>
+                <div class="button-grid">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-modal-ai-quote">
+                    <i data-lucide="circle-dollar-sign"></i> Generate Quote
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-modal-ai-customs">
+                    <i data-lucide="scroll"></i> Customs Info
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button class="btn btn-danger" id="btn-delete-shipment">
+            <i data-lucide="trash-2"></i>
+            <span>Delete Booking</span>
+          </button>
+          <button class="btn btn-primary" id="btn-save-modal-changes">
+            <i data-lucide="save"></i>
+            <span>Save Operational Changes</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  
+  <!-- Main Logic Script -->
+  <script src="app.js"></script>
+</body>
+</html>
